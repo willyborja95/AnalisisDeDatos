@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="">
+  <meta name="author" content="">
+  <title>SB Admin - Start Bootstrap Template</title>
+  <link href="{{ url_for ('static', filename='vendor/bootstrap/css/bootstrap.css')}}" rel="stylesheet">
+  <link href="{{ url_for ('static', filename='css/estilo.css')}}" rel="stylesheet">
+</head>
+
+<body class="bg-dark">
+  <div class="container">
+    <div class="card card-login mx-auto mt-5 formularioLogin">
+      <div class="card-header">Ingreso de usuarios</div>
+      <div class="card-body">
+        <form class="fomularioLogin" method="POST" action="{{url_for('autenticacion')}}">
+          <input name=_csrf_token type=hidden value="{{ csrf_token() }}">
+          <div class="row text-center filaLogin">
+            <div class="col-md-3">
+              <label>Usuario</label>
+            </div>
+            <div class="col-md-9">
+              {{ form.username }}
+            </div>
+          </div>
+          <div class="row text-center filaLogin">
+            <div class="col-md-3">
+              <label>Password</label>
+            </div>
+            <div class="col-md-9">
+              {{ form.password }}
+            </div>
+          </div>
+          <button class="btn btn-primary btn-block botonRegistrar" type="submit">Ingresar</button>
+        </form>
+        <div class="row">
+          <div class="col-md-6 d-inline-block">
+            <a class="d-block small mt-3" id="linkNuevoRegistro" href="/register">Registrar nueva cuenta</a>
+          </div>
+          <div class="col-md-6 d-inline-block">
+            {% if form.errors %}
+            <ul class=errors>
+              {% for error in form.errors %}
+              <li>{{ error }}</li>
+              {% endfor %}
+            </ul>
+            {% endif %}
+
+            {% with messages = get_flashed_messages() %}
+            {% if messages %}
+            <ul class=flashes>
+              {% for message in messages %}
+              <li>{{ message }}</li>
+              {% endfor %}
+            </ul>
+            {% endif %}
+            {% endwith %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- Bootstrap core JavaScript-->
+  <script src="{{ url_for ('static', filename='vendor/jquery/jquery.min.js')}}"></script>
+  <script src="{{ url_for ('static', filename='vendor/bootstrap/js/bootstrap.bundle.min.js')}}"></script>
+  <script src="{{ url_for ('static', filename='vendor/jquery-easing/jquery.easing.min.js')}}"></script>
+
+</body>
+
+</html>

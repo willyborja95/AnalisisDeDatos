@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+{% block content %}
+
+                <!--codigo seleccionar picker -->
+<br><br><br>
+                <script src="https://ajax.aspnetcdn.com/ajax/jQuery/jquery-3.2.1.min.js"></script>
+  <script type="text/javascript">
+
+          // The Browser API key obtained from the Google API Console.
+          var developerKey = 'AIzaSyAvRnLC76TAHLUi384Pm5K2lbK1f0ji50Q';
+
+          // The Client ID obtained from the Google API Console. Replace with your own Client ID.
+          var clientId = "495026972120-bofu0677vvi1ls008p9hiu7k77svgha3.apps.googleusercontent.com"
+
+          // Scope to use to access user's photos.
+          //var scope = ['https://www.googleapis.com/auth/photos'];
+          var scope = ['https://www.googleapis.com/auth/drive.readonly'];
+
+
+
+          var pickerApiLoaded = false;
+          var oauthToken;
+
+          // Use the API Loader script to load google.picker and gapi.auth.
+          function onApiLoad() {
+            gapi.load('auth', {'callback': onAuthApiLoad});
+            gapi.load('picker', {'callback': onPickerApiLoad});
+          }
+
+          function onAuthApiLoad() {
+            window.gapi.auth.authorize(
+                {
+                  'client_id': clientId,
+                  'scope': scope,
+                  'immediate': false
+                },
+                handleAuthResult);
+          }
+
+          function onPickerApiLoad() {
+            pickerApiLoaded = true;
+            createPicker();
+          }
+
+          function handleAuthResult(authResult) {
+            if (authResult && !authResult.error) {
+              oauthToken = authResult.access_token;
+              createPicker();
+            }
+          }
+
+
+          function createPicker() {
+
+        if (pickerApiLoaded && oauthToken) {
+          var picker = new google.picker.PickerBuilder()
+            .addView(google.picker.ViewId.SPREADSHEETS)
+            //.enableFeature(google.picker.Feature.NAV_HIDDEN)
+            //.hideTitleBar()
+            .setOAuthToken(oauthToken)
+            .setDeveloperKey(developerKey)
+            .setCallback(pickerCallback)
+            //.setOrigin('https://docs.google.com')
+            .build();
+          picker.setVisible(true);
+        }
+      }
+
+          // A simple callback implementation.
+          function pickerCallback(data) {
+            var url = 'nothing';
+            if (data[google.picker.Response.ACTION] == google.picker.Action.PICKED) {
+              var doc = data[google.picker.Response.DOCUMENTS][0];
+              url = doc[google.picker.Document.URL];
+            }
+            var message = data.docs[0].name;
+
+            $('#resultado').val(message);
+          }
+        </script>
+
+
+        <!-- The Google API Loader script. -->
+        <!--<script type="text/javascript" src="https://apis.google.com/js/api.js?onload=onApiLoad"></script>-->
+        <script type="text/javascript" src="https://apis.google.com/js/api.js"></script>
+
+                <!--fin picker -->
+        <script type="text/javascript" >
+        $('#funcion').on("click", function(){
+          alert("ruben dario");
+        });
+
+        function showMessage(msg) {
+          onApiLoad();
+          //alert(msg);
+        };
+        </script>
+
+                <form method=POST action="/index">
+            <div class = "form-group" >
+              <input type="text" id='resultado' name="age">
+            </div>
+            <input class="btn btn-primary btn-lg" type="submit" value="Cargar">
+            <input class="btn btn-primary btn-lg" type="button" value="Seleccionar" onclick="showMessage('msg');" />
+          </form>
+
+
+            </div>
+        </div>
+    </header>
+
+
+
+
+{% endblock %}

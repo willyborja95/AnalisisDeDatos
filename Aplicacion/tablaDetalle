@@ -1,0 +1,50 @@
+<table class="table table-hover">
+<thead>
+  <tr>
+    <th scope="col">#</th>
+    <th scope="col">Tweets</th>
+    <th scope="col">ReTweets</th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <th scope="row">1</th>
+    <td>{{retweet}} Retweetsss</td>
+    <td>{{tweet}} Tweets</td>
+  </tr>
+</tbody>
+</table>
+
+<table class="table table-hover">
+<thead>
+  <tr>
+    <th scope="col">#</th>
+    <th scope="col">Tweets con referencia a paginas web</th>
+    <th scope="col">Tweets sin referencia a paginas web</th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <th scope="row">1</th>
+    <td>{{paginas}} Tweets</td>
+<td>{{noPag}} Tweets</td>
+  </tr>
+</tbody>
+</table>
+
+<table class="table table-hover">
+<thead>
+  <tr>
+    <th scope="col">#</th>
+    <th scope="col">Tweets con mensiones a otras cuentas</th>
+    <th scope="col">Tweets sin mensiones a otras cuentas</th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <th scope="row">1</th>
+    <td>{{mensiones}} Tweets</td>
+<td>{{nomen}} Tweets</td>
+  </tr>
+</tbody>
+</table>

@@ -1,0 +1,186 @@
+@import url('https://fonts.googleapis.com/css?family=Montserrat');
+
+*, .row{
+	font-family: 'Montserrat', sans-serif;
+	margin: 0em;
+	padding: 0em;
+	margin: 0em;
+}
+
+html, body{
+	height: 100%;
+}
+
+#container {
+	min-width: 310px;
+	max-width: 800px;
+	height: 400px;
+	margin: 0 auto
+}
+
+#grafico{
+	width: 40px;
+}
+
+.formularioLogin{
+	width: 100%;
+}
+
+.fomularioLogin input{
+	font-size: 18px;
+	width: 80%;
+}
+
+.formularioRegistro label{
+	font-size: 15px;
+}
+
+.formularioRegistro input{
+	font-size: 15px;
+}
+
+.formularioRegistro{
+	width: 70%;
+}
+
+.botonRegistrar{
+	margin-top: 2em;
+	margin-bottom: 1em;
+	font-size: 15px;
+}
+
+.formularioRegistro #linkIniciarSecion{
+	font-size: 15px;
+}
+
+.flashes li{
+ 	list-style-type: none;
+	font-size: 15px;
+	font-style: italic;
+	color: #343A40;
+}
+
+.formularioLogin{
+	width: 50%;
+}
+
+.filaLogin{
+	margin: 1em 0em;
+}
+
+.filaLogin input{
+	font-size: 15px;
+}
+
+#linkNuevoRegistro{
+	font-size: 15px;
+}
+
+.barraSuperior, .nav{
+	background: #2C3E50;
+}
+
+.barraSuperior h1{
+	font-size: 15px;
+	color: #ffff;
+	margin: 0.8em 0em;
+	margin-left: 1.7em;
+	font-weight: 600;
+}
+
+#seccionContenido{
+	height: 100%;
+}
+
+.nav{
+	height: 96%;
+}
+
+.nav a{
+	display: block;
+
+}
+
+.links{
+	margin-top: 3em;
+}
+
+.imagen{
+	margin-top: 2em;
+}
+
+.imagen img{
+	width: 50%;
+	border-radius: 50%;
+}
+
+.imagenTexto{
+	margin: 1em 1em;
+	font-size: 13px;
+}
+
+.imagenTexto a{
+	margin-left: 0.5em;
+	color: #ffff;
+	text-decoration: none;
+}
+
+.imagenTexto img, .imagenTexto a{
+	display: inline-block;
+}
+
+footer{
+	padding-top: 15em;
+	margin-left: 1em;
+}
+
+footer p {
+	color: #ffff;
+	font-size: 13px;
+}
+
+.tituloResultados{
+	margin: 0.5em 0em;
+}
+
+.areaDespliegue{
+	overflow: auto;
+	max-height: 100%;
+}
+
+.seccionNube svg{
+	width: 100%;
+}
+
+.seccionTituloGrafico{
+	border-bottom: 6px solid #2C3E50;
+	background-color: #CCD6EB;
+	margin-top: 3em;
+	margin-bottom: 2em;
+	margin-left: 0em;
+	margin-right: 0em;
+}
+
+.seccionTituloGrafico h1{
+	font-size: 16px;
+	margin: 0em;
+}
+
+.secTituloGrafico{
+	margin: 0.3em 0.2em
+}
+
+.secDescripcionGrafico{
+	margin: 0.3em 0.2em
+}
+
+.seccionTituloGrafico h3{
+	font-size: 13px;
+	font-style: italic;
+	margin: 0em;
+}
+
+#chartdiv {
+  width: 100%;
+  height: 500px;
+}																		
