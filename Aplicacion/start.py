@@ -136,8 +136,12 @@ def autenticacion():
 def jsonDefault(object):
     return object.__dict__
 
-@app.route('/dashboard')
+@app.route('/dashboard', methods=['POST', 'GET'])
 def dashboard():
+    if request.method == 'POST':
+        age = request.form['age']
+        session['ruben'] = request.form['age']
+        #print(age)
     return render_template('contenido.html')
 
 @app.route('/obtenerDatosGenerales', methods=['POST', 'GET'])
@@ -224,7 +228,7 @@ def consultaHorasCitadas(serieContenido):
         listaHoras = re.findall(r'\d\d:', contenido)
         for hora in listaHoras:
             contenidoRecuperado.append(hora)
-            print hora.remove
+            #print hora.remove
 
     dfHoras = pandas.DataFrame({'Horas':contenidoRecuperado})
     listaEtiquetas = sorted(dfHoras.groupby('Horas').groups.keys())
@@ -323,5 +327,7 @@ def abrirCuenta():
     scope = ['http://spreadsheets.google.com/feeds']
     creds = ServiceAccountCredentials.from_json_keyfile_name('client_secret.json', scope)
     client = gspread.authorize(creds)
-    sheet = client.open('#sexo copy').sheet1
+    print(session['ruben'])
+    sheet = client.open(session['ruben']).sheet1
+    #sheet = client.open('#sexo copy').sheet1
     return sheet
