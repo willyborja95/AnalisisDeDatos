@@ -7,10 +7,10 @@
   <script type="text/javascript">
 
           // The Browser API key obtained from the Google API Console.
-          var developerKey = 'AIzaSyAvRnLC76TAHLUi384Pm5K2lbK1f0ji50Q';
+          var developerKey = 'AIzaSyCdlS_2suERymK8DpEpr4WD4Nsw_Mgy7Po';
 
           // The Client ID obtained from the Google API Console. Replace with your own Client ID.
-          var clientId = "495026972120-bofu0677vvi1ls008p9hiu7k77svgha3.apps.googleusercontent.com"
+          var clientId = "669861031441-68ls9frvivnccl15bulep952pl9mscu8.apps.googleusercontent.com"
 
           // Scope to use to access user's photos.
           //var scope = ['https://www.googleapis.com/auth/photos'];
@@ -96,7 +96,8 @@
         };
         </script>
 
-                <form method=POST action="/index">
+                <form method=POST action="{{ url_for('dashboard') }}">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
             <div class = "form-group" >
               <input type="text" id='resultado' name="age">
             </div>
