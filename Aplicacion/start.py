@@ -156,7 +156,7 @@ def obtenerDatosGenerales():
 def obtenerDatos():
     listaValoresJson = []
     dataFrameOriginal = cargarDataFrame()
-    listaValoresJson.append(consultaTweetsRetweets(dataFrameOriginal))
+    #listaValoresJson.append(consultaTweetsRetweets(dataFrameOriginal))
     listaValoresJson.append(consultaFrecuenciaHoras(dataFrameOriginal['Fecha']))
     listaValoresJson.append(consultaFrecuenciaDinero(dataFrameOriginal['Contenido']))
     listaValoresJson.append(consultaHashtagsMasUsados(dataFrameOriginal['Contenido']))
@@ -183,9 +183,24 @@ def obtenerNube():
         mimetype='text/json'
     )
 
+@app.route('/guardarAnalisis', methods=['POST', 'GET'])
+def guardarAnalisis():
+    dataFrameOriginal = cargarDataFrame()
+    valoresGrafica = consultaParticipacionCuentas(dataFrameOriginal['Usuarios'])
+    cadena = ''
+    for valor in valoresGrafica.lstValores:
+        cadena = cadena +" "+ unicode(valor.name)
+    valorJson = json.dumps(cadena, default=jsonDefault)
+    return app.response_class(
+        response=valorJson,
+        status=200,
+        mimetype='text/json'
+    )
+
 def cargarDataFrame():
-    dataFrameGeneral = pandas.DataFrame({'Fecha':abrirCuenta().col_values(4), 'Contenido':abrirCuenta().col_values(3),
-    'Usuarios':abrirCuenta().col_values(2), 'Entidades':abrirCuenta().col_values(18)})
+    dataFrameGeneral = pandas.DataFrame({'Fecha':abrirCuenta().col_values(4), 'Time':abrirCuenta().col_values(5),
+    'Contenido':abrirCuenta().col_values(3),'Usuarios':abrirCuenta().col_values(2),
+    'Entidades':abrirCuenta().col_values(18)})
     return dataFrameGeneral
 
 def consultaParticipacionCuentas(serieUsuarios):
@@ -208,7 +223,28 @@ def consultaTotalCuentas(serieUsuarios):
     return Valor(name="Usuarios participantes", y=len(listaEtiquetas)-2)
 
 def consultaTweetsRetweets(dataFrameOriginal):
+    # listaEtiquetas = ['Tweets', 'Retweets']
+    # dfResultado = pandas.DataFrame({'Resultado':dataFrameOriginal['Contenido'].str.contains("RT").values.tolist()})
+    # listaResultados = dfResultado.groupby(['Resultado']).size().values.tolist()
+    # listaValores = []
+    # for i in range (len(listaEtiquetas)):
+    #     listaValores.append(Valor(name=listaEtiquetas[i], y=listaResultados[i]))
+    # return ValoresGrafica(nombreGrafica="TWEETS Y RETWEETS", nombreSerie="Interacciones", lstValores=listaValores,
+    # tipoGrafico="pie", descripcion="Muestra la cantidad de tweets y retweets existentes.")
+
     listaEtiquetas = ['Tweets', 'Retweets']
+    listaFechas = dataFrameOriginal['Time'].tolist()
+
+    for fecha in listaFechas:
+        re.findall(r'\d\d/\d\d/\d\d\d\d', fecha)
+
+    pd.to_datetime(raw_data['Mycol'], format='%d%b%Y:%H:%M:%S.%f')
+
+
+
+
+    dfProcesado = pandas.DataFrame({'Resultado':dataFrameOriginal['Contenido'], 'Fecha':dataFrameOriginal['Fecha']})
+
     dfResultado = pandas.DataFrame({'Resultado':dataFrameOriginal['Contenido'].str.contains("RT").values.tolist()})
     listaResultados = dfResultado.groupby(['Resultado']).size().values.tolist()
     listaValores = []
@@ -216,6 +252,7 @@ def consultaTweetsRetweets(dataFrameOriginal):
         listaValores.append(Valor(name=listaEtiquetas[i], y=listaResultados[i]))
     return ValoresGrafica(nombreGrafica="TWEETS Y RETWEETS", nombreSerie="Interacciones", lstValores=listaValores,
     tipoGrafico="pie", descripcion="Muestra la cantidad de tweets y retweets existentes.")
+
 
 def consultaHorasCitadas(serieContenido):
     contenidoRecuperado = []
