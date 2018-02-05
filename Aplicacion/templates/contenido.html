@@ -2,6 +2,7 @@
 <meta name="csrf-token" content="{{ csrf_token() }}">
 <section class="row seccionResultados">
   <h2 class="text-center tituloResultados">Resultados del análisis</h2>
+  <button type="button" name="button" onclick="guardarAnalisis()">Guardar Análisis</button>
 </section>
 <section id="seccionResultados">
 <div id="chartdiv"></div>
@@ -9,6 +10,24 @@
 </section>
 <script type="text/javascript">
   window.onload = obtenerGraficaTweetsRetweets;
+  var cadenaAnalisis = '';
+  function guardarAnalisis(){
+    alert("llego");
+    var csrftoken = "{{ csrf_token() }}";
+    $.ajax({
+        type : "POST",
+        url : "{{ url_for('guardarAnalisis') }}",
+        beforeSend: function(xhr, settings) {
+          if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
+            xhr.setRequestHeader("X-CSRFToken", csrftoken)
+        }},
+        data: JSON.stringify(cadenaAnalisis),
+        contentType: 'application/json;charset=UTF-8',
+        success: function(result) {
+            alert("exito");
+        }
+      });
+  }
 
   function obtenerGraficaTweetsRetweets() {
     //generarGraficaDual();
@@ -24,6 +43,7 @@
         }
       },
       success: function(data) {
+        cadenaAnalisis = data;
         for (var i = 0; i < data.length; i++) {
           var filaGrafico = "";
           crearSeccionTituloGrafico(data[i].nombreGrafica, data[i].descripcion);
@@ -37,7 +57,6 @@
         alert("error");
       }
     });
-
     $.ajax({
       type: 'POST',
       url: '{{url_for('obtenerNube')}}',
@@ -225,7 +244,6 @@
     var data = []
     for (var i = 0; i < listaResultados.length; i++) {
       data.push([listaResultados[i].name, listaResultados[i].y]);
-      alert(listaResultados[i].name);
     }
     chart.series[0].setData(data);
   }

@@ -52,6 +52,59 @@ class Usuario(UserMixin, db.Model):
     def __unicode__(self):
         return self.username
 
+class Proyecto(db.Model):
+    __tablename__ = 'Proyecto'
+    id = db.Column(db.Integer, primary_key=True)
+    nombre = db.Column(db.String(100))
+
+    def __init__(self, nombre):
+        self.nombre = nombre
+
+    def __unicode__(self):
+        return self.nombreGrafico
+
+class InformacionGrafico(db.Model):
+    __tablename__ = 'InformacionGrafico'
+    id = db.Column(db.Integer, primary_key=True)
+    nombreSerie = db.Column(db.String(100))
+    nombreGrafica = db.Column(db.String(100))
+    tipoGrafico = db.Column(db.String(100))
+    descripcion = db.Column(db.String(300))
+    rel = db.relationship('Proyecto', backref="Proyecto", lazy=True)
+    proyectoId = db.Column(db.Integer, db.ForeignKey('Proyecto.id'))
+
+    def __init__(self, nombreSerie, nombreGrafica, tipoGrafico, proyectoId, descripcion):
+        self.nombreSerie = nombreSerie
+        self.nombreGrafica = nombreGrafica
+        self.tipoGrafico = tipoGrafico
+        self.proyectoId = proyectoId
+        self.descripcion = descripcion
+
+    def getId(self):
+        return self.id
+
+    def __unicode__(self):
+        return self.nombreGrafico
+
+class Resultado(db.Model):
+    __tablename__ = 'Resultado'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100))
+    y = db.Column(db.String(100))
+    ValoresGrafica_Valores = db.relationship('InformacionGrafico', backref="InformacionGrafico", lazy=True)
+    valorGraficaId = db.Column(db.Integer, db.ForeignKey('InformacionGrafico.id'))
+
+    def __init__(self, name, y, valorGraficaId):
+        self.name = name
+        self.y = y
+        self.valorGraficaId =valorGraficaId
+
+    def getId(self):
+        return self.id
+
+    def __unicode__(self):
+        return self.name
+
 #Views
 
 @app.route('/')
@@ -189,12 +242,31 @@ def obtenerNube():
 
 @app.route('/guardarAnalisis', methods=['POST', 'GET'])
 def guardarAnalisis():
-    dataFrameOriginal = cargarDataFrame()
-    valoresGrafica = consultaParticipacionCuentas(dataFrameOriginal['Usuarios'])
-    cadena = ''
-    for valor in valoresGrafica.lstValores:
-        cadena = cadena +" "+ unicode(valor.name)
-    valorJson = json.dumps(cadena, default=jsonDefault)
+    if request.method == 'POST':
+        stringData = request.data
+        jsonData = json.loads(stringData)
+        proyecto = Proyecto('MiProyecto')
+        db.session.add(proyecto)
+        db.session.commit()
+        for data in jsonData:
+            informacionGrafico = InformacionGrafico(nombreSerie=data['nombreSerie'], nombreGrafica=data['nombreGrafica'],
+            tipoGrafico=data['tipoGrafico'], proyectoId=proyecto.id, descripcion=data['descripcion'])
+            db.session.add(informacionGrafico)
+            db.session.commit()
+            for valor in data['lstValores']:
+                resultado = Resultado(name=valor['name'], y=valor['y'], valorGraficaId=informacionGrafico.id)
+                db.session.add(resultado)
+                db.session.commit()
+        print("llego 222222222")
+
+
+
+    valorJson = '{"nombre":"willian"}'
+    valorJson = json.dumps(valorJson)
+    # valorJson = '{"nombres":"willian"}'
+    # if request.method == "POST":
+    #     print(len(request))
+    #
     return app.response_class(
         response=valorJson,
         status=200,
@@ -203,8 +275,7 @@ def guardarAnalisis():
 
 def cargarDataFrame():
     dataFrameGeneral = pandas.DataFrame({'Fecha':abrirCuenta().col_values(4), 'Time':abrirCuenta().col_values(5),
-    'Contenido':abrirCuenta().col_values(3),'Usuarios':abrirCuenta().col_values(2),
-    'Entidades':abrirCuenta().col_values(18)})
+    'Contenido':abrirCuenta().col_values(3),'Usuarios':abrirCuenta().col_values(2)})
     return dataFrameGeneral
 
 def consultaParticipacionCuentas(serieUsuarios):
@@ -364,7 +435,6 @@ def abrirCuenta():
     scope = ['http://spreadsheets.google.com/feeds']
     creds = ServiceAccountCredentials.from_json_keyfile_name('client_secret.json', scope)
     client = gspread.authorize(creds)
-    print(session['ruben'])
     sheet = client.open(session['ruben']).sheet1
     #sheet = client.open('#sexo copy').sheet1
     return sheet

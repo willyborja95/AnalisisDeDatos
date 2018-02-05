@@ -43,15 +43,15 @@
       <section class="links">
         <section class="imagenTexto">
           <img src="{{url_for ('static', filename='images/folder.png')}}" alt="">
-          <a href="#">Mis hojas de datos</a>
+          <a href="{{ url_for('documentos') }}">Mis hojas de datos</a>
         </section>
         <section class="imagenTexto">
           <img src="{{url_for ('static', filename='images/graph.png')}}" alt="">
-          <a href="#">Reportes y análisis</a>
+          <a href="{{ url_for('dashboard') }}">Reportes y análisis</a>
         </section>
         <section class="imagenTexto">
           <img src="{{url_for ('static', filename='images/id-card.png')}}" alt="">
-          <a href="#">Mi cuenta</a>
+          <a href="{{ url_for('dashboard') }}">Analisis guardados</a>
         </section>
       </section>
 
