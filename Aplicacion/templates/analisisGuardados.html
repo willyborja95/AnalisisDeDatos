@@ -1,0 +1,56 @@
+{% extends 'base.html' %} {% block content %}
+<meta name="csrf-token" content="{{ csrf_token() }}">
+<h3 class="text-center tituloAnalisis">Seleccione uno de los registros almacenados</h3>
+<section id="seccionResultados">
+
+</section>
+
+<script type="text/javascript">
+  window.onload = obtenerAnalisis;
+  function obtenerAnalisis(){
+    var csrftoken = "{{ csrf_token() }}";
+    $.ajax({
+      type: 'POST',
+      url: '{{url_for('obtenerAnalisisGuardados')}}',
+      contentType: 'application/json;charset=UTF-8',
+      beforeSend: function(xhr, settings) {
+        if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
+          xhr.setRequestHeader("X-CSRFToken", csrftoken)
+        }
+      },
+      success: function(data) {
+        var fila = "";
+        for (var i = 0; i < data.length; i++) {
+          if(i%4==0){
+            fila = crearFila();
+          }
+          crearBotonAnalisis(fila, data[i]);
+        }
+      },
+      error: function(err) {
+        alert("error");
+      }
+    });
+  }
+
+  function crearFila(){
+    var seccionResultados = document.getElementById("seccionResultados");
+    var seccionFilaGrafico = document.createElement("SECTION");
+    seccionFilaGrafico.setAttribute("class", "col-md-12 seccionFila");
+    seccionResultados.appendChild(seccionFilaGrafico);
+    return seccionFilaGrafico;
+  }
+
+  function crearBotonAnalisis(fila, texto){
+    var boton = document.createElement("a");
+    boton.setAttribute("class", "col-md-2 botonAnalisis");
+    boton.setAttribute("type", "button");
+    boton.innerHTML=texto;
+    boton.href="{{url_for('obtenerResultados', nombreHoja="#maltratoanimal")}}"
+    //boton.href="{{url_for('obtenerResultados', nombreHoja='willyborja')}}";
+    fila.appendChild(boton);
+
+  }
+</script>
+
+{% endblock %}

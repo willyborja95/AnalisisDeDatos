@@ -2,36 +2,14 @@
 <meta name="csrf-token" content="{{ csrf_token() }}">
 <section class="row seccionResultados">
   <h2 class="text-center tituloResultados">Resultados del análisis</h2>
-  <button type="button" name="button" onclick="guardarAnalisis()">Guardar Análisis</button>
 </section>
 <section id="seccionResultados">
-<div id="chartdiv"></div>
-
 </section>
 <script type="text/javascript">
   window.onload = obtenerGraficaTweetsRetweets;
-  var cadenaAnalisis = '';
-  function guardarAnalisis(){
-    alert("llego");
-    var csrftoken = "{{ csrf_token() }}";
-    $.ajax({
-        type : "POST",
-        url : "{{ url_for('guardarAnalisis') }}",
-        beforeSend: function(xhr, settings) {
-          if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
-            xhr.setRequestHeader("X-CSRFToken", csrftoken)
-        }},
-        data: JSON.stringify(cadenaAnalisis),
-        contentType: 'application/json;charset=UTF-8',
-        success: function(result) {
-            alert("exito");
-        }
-      });
-  }
 
   function obtenerGraficaTweetsRetweets() {
     //generarGraficaDual();
-    generarMapa();
     var csrftoken = "{{ csrf_token() }}";
     $.ajax({
       type: 'POST',
@@ -43,31 +21,19 @@
         }
       },
       success: function(data) {
-        cadenaAnalisis = data;
         for (var i = 0; i < data.length; i++) {
           var filaGrafico = "";
           crearSeccionTituloGrafico(data[i].nombreGrafica, data[i].descripcion);
           filaGrafico = crearFilaGrafico();
           generarGraficaPastel(crearSeccionGraficoTotal(filaGrafico), data[i].nombreGrafica, data[i].nombreSerie,
           data[i].lstValores, data[i].tipoGrafico);
+        }
+        var cadena = "";
+        for (var j = 0; j < data[data.length-1].lstValores.length; j++) {
+          cadena = cadena+data[data.length-1].lstValores[j].name+" ";
+        }
+        constructorNube(cadena);
 
-        }
-      },
-      error: function(err) {
-        alert("error");
-      }
-    });
-    $.ajax({
-      type: 'POST',
-      url: '{{url_for('obtenerNube')}}',
-      contentType: 'application/json;charset=UTF-8',
-      beforeSend: function(xhr, settings) {
-        if (!/^(GET|HEAD|OPTIONS|TRACE)$/i.test(settings.type) && !this.crossDomain) {
-          xhr.setRequestHeader("X-CSRFToken", csrftoken)
-        }
-      },
-      success: function(data) {
-        constructorNube(data);
       },
       error: function(err) {
         alert("error");
@@ -194,7 +160,7 @@
 
       vis.update(getWords(i++ % words.length))
       setTimeout(function() {
-        showNewWords(vis, i + 1)
+        showNewWords(vis, i + 0)
       }, 2000) //Aumentar exageradamente para que no soporte el tamanio y quede estatico
     }
 
@@ -233,6 +199,9 @@
           }
         }
       },
+      xAxis: {
+            categories: []
+        },
       series: [{
         name: nombreSerie,
         colorByPoint: true,
@@ -242,9 +211,12 @@
 
     var chart = $(filaGrafico).highcharts();
     var data = []
+    var etiquetas = []
     for (var i = 0; i < listaResultados.length; i++) {
       data.push([listaResultados[i].name, listaResultados[i].y]);
+      etiquetas.push(listaResultados[i].name);
     }
+    chart.xAxis[0].setCategories(etiquetas);
     chart.series[0].setData(data);
   }
 
@@ -283,7 +255,7 @@
       //Entering and existing words
       cloud
         .transition()
-        .duration(2500) //cambiar para el tiempo
+        .duration(1500) //cambiar para el tiempo
         .style("font-size", function(d) {
           return d.size + "px";
         })

@@ -61,7 +61,7 @@ class Proyecto(db.Model):
         self.nombre = nombre
 
     def __unicode__(self):
-        return self.nombreGrafico
+        return self.nombre
 
 class InformacionGrafico(db.Model):
     __tablename__ = 'InformacionGrafico'
@@ -194,14 +194,18 @@ def dashboard():
     if request.method == 'POST':
         age = request.form['age']
         session['ruben'] = request.form['age']
-        #print(age)
     return render_template('contenido.html')
 
-@app.route('/obtenerDatosGenerales', methods=['POST', 'GET'])
-def obtenerDatosGenerales():
+@app.route('/analisisGuardados')
+def analisisGuardados():
+    return render_template('analisisGuardados.html')
+
+@app.route('/obtenerAnalisisGuardados', methods=['POST', 'GET'])
+def obtenerAnalisisGuardados():
     listaValoresJson = []
-    dataFrameOriginal = cargarDataFrame()
-    listaValoresJson = (consultaTweetsRetweets(dataFrameOriginal))
+    proyectos = Proyecto.query.all()
+    for p in proyectos:
+        listaValoresJson.append(p.nombre)
     listaValoresJson = json.dumps(listaValoresJson, default=jsonDefault)
     return app.response_class(
         response=listaValoresJson,
@@ -211,14 +215,34 @@ def obtenerDatosGenerales():
 
 @app.route('/obtenerDatos', methods=['POST', 'GET'])
 def obtenerDatos():
+
+    proyecto = Proyecto.query.filter_by(nombre=session['ruben']).first()
     listaValoresJson = []
-    dataFrameOriginal = cargarDataFrame()
-    #listaValoresJson.append(consultaTweetsRetweets(dataFrameOriginal))
-    listaValoresJson.append(consultaFrecuenciaHoras(dataFrameOriginal['Fecha']))
-    listaValoresJson.append(consultaFrecuenciaDinero(dataFrameOriginal['Contenido']))
-    listaValoresJson.append(consultaHashtagsMasUsados(dataFrameOriginal['Contenido']))
-    #listaValoresJson.append(consultaHorasCitadas(dataFrameOriginal['Contenido']))
-    listaValoresJson.append(consultaParticipacionCuentas(dataFrameOriginal['Usuarios']))
+
+    if proyecto is not None:
+        listaInformacionGrafico = InformacionGrafico.query.filter_by(proyectoId=proyecto.id).all()
+        for informacionGrafico in listaInformacionGrafico:
+            nombreSerie = informacionGrafico.nombreSerie
+            nombreGrafica = informacionGrafico.nombreGrafica
+            tipoGrafico = informacionGrafico.tipoGrafico
+            descripcion = informacionGrafico.descripcion
+            listaResultados = Resultado.query.filter_by(valorGraficaId=informacionGrafico.id).all()
+            listaValores=[]
+            for resultado in listaResultados:
+                listaValores.append(Valor(name=resultado.name, y=int(resultado.y)))
+            listaValoresJson.append(ValoresGrafica(nombreGrafica=nombreGrafica, nombreSerie=nombreSerie,
+            lstValores=listaValores, tipoGrafico=tipoGrafico, descripcion=descripcion))
+    else:
+        dataFrameOriginal = cargarDataFrame()
+        listaValoresJson.append(consultaTweetsRetweets(dataFrameOriginal['Contenido']))
+        listaValoresJson.append(consultaFrecuenciaHoras(dataFrameOriginal['Fecha']))
+        listaValoresJson.append(consultaFrecuenciaDinero(dataFrameOriginal['Contenido']))
+        listaValoresJson.append(consultaHashtagsMasUsados(dataFrameOriginal['Contenido']))
+        #listaValoresJson.append(consultaHorasCitadas(dataFrameOriginal['Contenido']))
+        listaValoresJson.append(consultaParticipacionCuentas(dataFrameOriginal['Usuarios']))
+        listaValoresJson.append(consultaNumeroHashtagsMasUsados(dataFrameOriginal['Contenido']))
+        listaValoresJson.append(consultaPalabrasMasUsadas(dataFrameOriginal['Contenido']))
+        guardarAnalisis(listaValoresJson, session['ruben'])
     listaValoresJson = json.dumps(listaValoresJson, default=jsonDefault)
     return app.response_class(
         response=listaValoresJson,
@@ -240,38 +264,20 @@ def obtenerNube():
         mimetype='text/json'
     )
 
-@app.route('/guardarAnalisis', methods=['POST', 'GET'])
-def guardarAnalisis():
-    if request.method == 'POST':
-        stringData = request.data
-        jsonData = json.loads(stringData)
-        proyecto = Proyecto('MiProyecto')
-        db.session.add(proyecto)
+def guardarAnalisis(listaValoresJson, nombreHoja):
+    proyecto = Proyecto(nombreHoja)
+    db.session.add(proyecto)
+    db.session.commit()
+    for valores in listaValoresJson:
+        informacionGrafico = InformacionGrafico(nombreSerie=valores.nombreSerie, nombreGrafica=valores.nombreGrafica,
+        tipoGrafico=valores.tipoGrafico, proyectoId=proyecto.id, descripcion=valores.descripcion)
+        db.session.add(informacionGrafico)
         db.session.commit()
-        for data in jsonData:
-            informacionGrafico = InformacionGrafico(nombreSerie=data['nombreSerie'], nombreGrafica=data['nombreGrafica'],
-            tipoGrafico=data['tipoGrafico'], proyectoId=proyecto.id, descripcion=data['descripcion'])
-            db.session.add(informacionGrafico)
+        for valor in valores.lstValores:
+            resultado = Resultado(name=valor.name, y=valor.y, valorGraficaId=informacionGrafico.id)
+            db.session.add(resultado)
             db.session.commit()
-            for valor in data['lstValores']:
-                resultado = Resultado(name=valor['name'], y=valor['y'], valorGraficaId=informacionGrafico.id)
-                db.session.add(resultado)
-                db.session.commit()
-        print("llego 222222222")
 
-
-
-    valorJson = '{"nombre":"willian"}'
-    valorJson = json.dumps(valorJson)
-    # valorJson = '{"nombres":"willian"}'
-    # if request.method == "POST":
-    #     print(len(request))
-    #
-    return app.response_class(
-        response=valorJson,
-        status=200,
-        mimetype='text/json'
-    )
 
 def cargarDataFrame():
     dataFrameGeneral = pandas.DataFrame({'Fecha':abrirCuenta().col_values(4), 'Time':abrirCuenta().col_values(5),
@@ -297,31 +303,13 @@ def consultaTotalCuentas(serieUsuarios):
     listaEtiquetas = dfUsuarios.drop_duplicates(subset='Usuarios', keep='first', inplace=False).values.tolist()
     return Valor(name="Usuarios participantes", y=len(listaEtiquetas)-2)
 
-def consultaTweetsRetweets(dataFrameOriginal):
-    # listaEtiquetas = ['Tweets', 'Retweets']
-    # dfResultado = pandas.DataFrame({'Resultado':dataFrameOriginal['Contenido'].str.contains("RT").values.tolist()})
-    # listaResultados = dfResultado.groupby(['Resultado']).size().values.tolist()
-    # listaValores = []
-    # for i in range (len(listaEtiquetas)):
-    #     listaValores.append(Valor(name=listaEtiquetas[i], y=listaResultados[i]))
-    # return ValoresGrafica(nombreGrafica="TWEETS Y RETWEETS", nombreSerie="Interacciones", lstValores=listaValores,
-    # tipoGrafico="pie", descripcion="Muestra la cantidad de tweets y retweets existentes.")
-
+def consultaTweetsRetweets(serieContenido):
     listaEtiquetas = ['Tweets', 'Retweets']
-    listaFechas = dataFrameOriginal['Time'].tolist()
-
-    for fecha in listaFechas:
-        re.findall(r'\d\d/\d\d/\d\d\d\d', fecha)
-
-    pd.to_datetime(raw_data['Mycol'], format='%d%b%Y:%H:%M:%S.%f')
-
-
-
-
-    dfProcesado = pandas.DataFrame({'Resultado':dataFrameOriginal['Contenido'], 'Fecha':dataFrameOriginal['Fecha']})
-
-    dfResultado = pandas.DataFrame({'Resultado':dataFrameOriginal['Contenido'].str.contains("RT").values.tolist()})
-    listaResultados = dfResultado.groupby(['Resultado']).size().values.tolist()
+    contadorRt = 0;
+    for fila in serieContenido.tolist():
+        if (re.findall('^RT',  fila)):
+            contadorRt += 1
+    listaResultados = [len(serieContenido.tolist())-contadorRt, contadorRt]
     listaValores = []
     for i in range (len(listaEtiquetas)):
         listaValores.append(Valor(name=listaEtiquetas[i], y=listaResultados[i]))
@@ -407,29 +395,45 @@ def consultaHashtagsMasUsados(serieContenido):
     return ValoresGrafica(nombreGrafica="Hashtags más utilizados", nombreSerie="Referencias", lstValores=listaValores,
     tipoGrafico="column", descripcion="Muestra los 20 hashtags más referenciados en los tweets.")
 
-def consultaNumeroHashtagsMasUsados(serieEntidades):
-    contenidoRecuperado = []
-    listaSerieEntidades = serieEntidades.tolist()
-    stringEncoded = json.dumps(listaSerieEntidades[1])
-    print(stringEncoded)
-    stringJson = json.loads(stringEncoded)
-    print(type(stringJson))
-
-    for elemento in stringJson:
-        for entidad in elemento[0]:
-            contenidoRecuperado.append(len(elemento['hashtags']))
-
-    dfNumeroHashtags = pandas.DataFrame({'numeroHashtags':contenidoRecuperado})
-    listaEtiquetas = sorted(dfNumeroHashtags.groupby('numeroHashtags').groups.keys())
-    listaResultados = dfNumeroHashtags.groupby('numeroHashtags').size().values.tolist()
-    dfNumeroHashtagsSorted = pandas.DataFrame({'Etiquetas':listaEtiquetas, 'Resultados':listaResultados})
-    dfNumeroHashtagsSorted = dfNumeroHashtagsSorted.sort_values(by=('Resultados'),ascending=[False]).head(20)
-    listaEtiquetas = dfNumeroHashtagsSorted['Etiquetas'].tolist()
-    listaResultados = dfNumeroHashtagsSorted['Resultados'].tolist()
+def consultaPalabrasMasUsadas(serieContenido):
+    lstPalabrasProcesadas = []
+    lstFilas = serieContenido.tolist()
+    for linea in lstFilas:
+        for palabra in unicode(linea).split(' '):
+            palabraProcesada = re.sub('\W+|RT','', palabra)
+            lstPalabrasProcesadas.append(palabraProcesada.lower())
+    dfPalabras = pandas.DataFrame({'Palabras':lstPalabrasProcesadas})
+    listaEtiquetas = sorted(dfPalabras.groupby('Palabras').groups.keys())
+    listaResultados = dfPalabras.groupby('Palabras').size().values.tolist()
+    dfPalabrasSorted = pandas.DataFrame({'Etiquetas':listaEtiquetas, 'Resultados':listaResultados})
+    dfPalabrasSorted = dfPalabrasSorted.sort_values(by=('Resultados'),ascending=[False]).head(20)
+    listaEtiquetas = dfPalabrasSorted['Etiquetas'].tolist()
+    listaResultados = dfPalabrasSorted['Resultados'].tolist()
     listaValores = []
     for i in range (len(listaEtiquetas)):
         listaValores.append(Valor(name=listaEtiquetas[i], y=listaResultados[i]))
-    return ValoresGrafica(nombreGrafica="Número de hashtags más citados", nombreSerie="Referencias", lstValores=listaValores, tipoGrafico="column")
+    return ValoresGrafica(nombreGrafica="Palabras más utilizadas", nombreSerie="Frecuencia uso", lstValores=listaValores,
+    tipoGrafico="column", descripcion="Muestra las 20 palabras más utilizadas en el contenido de los tweets.")
+
+def consultaNumeroHashtagsMasUsados(serieContenido):
+    lstIncidencia = []
+    lstFilas = serieContenido.tolist()
+    for linea in lstFilas:
+        lstIncidencia.append(len(re.findall(' #\S+',linea)))
+
+    dfNumeroHashtags = pandas.DataFrame({'NumeroHashtags':lstIncidencia})
+    listaEtiquetas = sorted(dfNumeroHashtags.groupby('NumeroHashtags').groups.keys())
+    listaResultados = dfNumeroHashtags.groupby('NumeroHashtags').size().values.tolist()
+    dfNumeroHashtagsSorted = pandas.DataFrame({'Etiquetas':listaEtiquetas, 'Resultados':listaResultados})
+    dfNumeroHashtagsSorted = dfNumeroHashtagsSorted.sort_values(by=('Resultados'),ascending=[False]).head(10)
+    listaEtiquetas = dfNumeroHashtagsSorted['Etiquetas'].tolist()
+    listaResultados = dfNumeroHashtagsSorted['Resultados'].tolist()
+    print(dfNumeroHashtagsSorted)
+    listaValores = []
+    for i in range (len(listaEtiquetas)):
+        listaValores.append(Valor(name=listaEtiquetas[i], y=listaResultados[i]))
+    return ValoresGrafica(nombreGrafica="Número de hashtags más frecuentes", nombreSerie="Frecuencia uso", lstValores=listaValores, tipoGrafico="bar",
+    descripcion="Muestra el número de hashtags más utilizado en el contenido de los tweets.")
 
 def abrirCuenta():
     scope = ['http://spreadsheets.google.com/feeds']
